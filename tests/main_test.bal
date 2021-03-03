@@ -1,5 +1,4 @@
-
-// Copyright (c) 2018 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2020 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 //
 // WSO2 Inc. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -15,142 +14,266 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/config;
 import ballerina/test;
-import ballerina/io;
+import ballerina/log;
+import ballerina/lang.runtime;
 
 //Create an endpoint to use Gmail Connector
-GoogleContactsConfiguration gContactConfig = {
-    oauthClientConfig: {
-        accessToken: config:getAsString("ACCESS_TOKEN"),
-        refreshConfig: {
-            refreshUrl: REFRESH_URL,
-            refreshToken: config:getAsString("REFRESH_TOKEN"),
-            clientId: config:getAsString("CLIENT_ID"),
-            clientSecret: config:getAsString("CLIENT_SECRET")
-        }
+GoogleContactsConfiguration googleContactConfig = {oauthClientConfig: {
+        clientId: os:getEnv("CLIENT_ID"),
+        clientSecret: os:getEnv("CLIENT_SECRET"),
+        refreshUrl: REFRESH_URL,
+        refreshToken: os:getEnv("REFRESH_TOKEN")
+    }};
+
+Client googleContactClient = check new (googleContactConfig);
+
+@test:Config {}
+function testListOtherContacts() {
+    log:print("Running List Other Contact Test");
+    string[] readMasks = ["names", "phoneNumbers", "emailAddresses"];
+    var listContacts = googleContactClient->listOtherContacts(readMasks);
+    if (listContacts is Person[]) {
+        log:print(listContacts.toString());
+        test:assertTrue(true, msg = "List Other Contacts Failed");
+    } else {
+        test:assertFail(msg = listContacts.message());
     }
-};
+}
 
-Client gContactClient = new (gContactConfig);
+@test:Config {}
+function testCopyOtherContactToMyContact() {
+    log:print("Running copy OtherContact To MyContact Test");
+    string[] copyMask = ["names", "emailAddresses", "phoneNumbers"];
+    string[] readMask = ["names", "emailAddresses", "phoneNumbers"];
+    var copyContacts = googleContactClient->copyOtherContactToMyContact(copyMask, readMask, "otherContacts/c8846080985039646639");
+    if (copyContacts is Person) {
+        log:print(copyContacts.toString());
+        test:assertTrue(true, msg = "List Other Contacts Failed");
+    } else {
+        test:assertFail(msg = copyContacts.message());
+    }
+}
 
-// @test:Config {}
-// function testListOtherContacts() {
-//     var listContacts = gContactClient->listOtherContacts();
-//     io:println(listContacts);
-//     if (listContacts is json[]) {
-//         test:assertTrue(true, msg = "List Other Contacts Failed");
-//     } else {
-//         test:assertFail(msg = listContacts.message());
-//     }
-// }
+@test:Config {}
+function testSearchOtherContacts() {
+    log:print("Running Search Other Contacts Test");
+    SearchResponse|error searchOtherContacts = googleContactClient->searchOtherContacts("Th");
+    if (searchOtherContacts is SearchResponse) {
+        log:print(searchOtherContacts.toString());
+        test:assertTrue(true, msg = "Get Contact Failed");
+    } else {
+        test:assertFail(msg = searchOtherContacts.message());
+    }
+}
 
-// @test:Config {}
-// function testGetPeople() {
-//     var getPeople = gContactClient->getPeople("people/103798157137551654042");
-//     if (getPeople is json) {
-//         test:assertTrue(true, msg = "List Other Contacts Failed");
-//     } else {
-//         test:assertFail(msg = getPeople.message());
-//     }
-// }
+string contactResourceName = "";
 
-// @test:Config {}
-// function testBatchGetPeople() {
-//     var BatchGetPeople = gContactClient->batchGetPeople();
-//     if (BatchGetPeople is json) {
-//         test:assertTrue(true, msg = "List Other Contacts Failed");
-//     } else {
-//         test:assertFail(msg = BatchGetPeople.message());
-//     }
-// }
+@test:Config {}
+function testCreateContact() {
+    log:print("Running Create Contact Test");
+    CreatePerson createContact = {
+        "emailAddresses": [],
+        "names": [{
+            "displayName": "Kapilraaj Perinpanayagam",
+            "familyName": "Perinpanayagam",
+            "givenName": "Test",
+            "displayNameLastFirst": "Perinpanayagam, Kapilraaj",
+            "unstructuredName": "Kapilraaj Perinpanayagam"
+        }]
+    };
+    string[] personFields = ["names", "phoneNumbers"];
+    string[] sources = ["READ_SOURCE_TYPE_CONTACT"];
+    Person|error createdContact = googleContactClient->createContact(createContact, personFields, sources);
+    if (createdContact is Person) {
+        contactResourceName = <@untainted>createdContact.resourceName;
+        log:print(createdContact.toString());
+        test:assertTrue(true, msg = "Create Contact Failed");
+    } else {
+        test:assertFail(msg = createdContact.message());
+    }
+}
 
-// @test:Config {}
-// function testListDirectoryPeople() {
-//     var listDirectoryPeople = gContactClient->listDirectoryPeople();
-//     if (listDirectoryPeople is json) {
-//         test:assertTrue(true, msg = "List Other Contacts Failed");
-//     } else {
-//         test:assertFail(msg = listDirectoryPeople.message());
-//     }
-// }
+@test:Config {dependsOn: [testCreateContact]}
+function testGetPeople() {
+    log:print("Running Get People Test");
+    runtime:sleep(10);
+    string[] personFields = ["names", "phoneNumbers"];
+    string[] sources = ["READ_SOURCE_TYPE_CONTACT"];
+    Person|error getPeople = googleContactClient->getPeople(contactResourceName, personFields, sources);
+    if (getPeople is Person) {
+        log:print(getPeople.toString());
+        test:assertTrue(true, msg = "Get Contact Failed");
+    } else {
+        test:assertFail(msg = getPeople.message());
+    }
+}
 
-// @test:Config {}
-// function testCreateContact() {
-//     var createContact = gContactClient->createContact();
-//     if (createContact is json) {
-//         test:assertTrue(true, msg = "List Other Contacts Failed");
-//     } else {
-//         test:assertFail(msg = createContact.message());
-//     }
-// }
+@test:Config {}
+function testBatchGetPeople() {
+    log:print("Running Batch Contact Test");
+    runtime:sleep(10);
+    var batchGetPeople = googleContactClient->batchGetPeople();
+    if (batchGetPeople is BatchGetResponse) {
+        log:print(batchGetPeople.toString());
+        test:assertTrue(true, msg = "Batch Get People Failed");
+    } else {
+        test:assertFail(msg = batchGetPeople.message());
+    }
+}
 
-// @test:Config {}
-// function testListPeopleConnection() {
-//     var listPeopleConnection = gContactClient->listPeopleConnection("people/me");
-//     if (listPeopleConnection is json) {
-//         test:assertTrue(true, msg = "List Other Contacts Failed");
-//     } else {
-//         test:assertFail(msg = listPeopleConnection.message());
-//     }
-// }
+@test:Config {}
+function testSearchPeople() {
+    log:print("Running Search People Test");
+    runtime:sleep(10);
+    SearchResponse|error searchPeople = googleContactClient->searchPeople("Te");
+    if (searchPeople is SearchResponse) {
+        log:print(searchPeople.toString());
+        test:assertTrue(true, msg = "Get Contact Failed");
+    } else {
+        test:assertFail(msg = searchPeople.message());
+    }
+}
 
-string contactGroupResourceName="";
+@test:Config {dependsOn: [testCreateContact]}
+function testUpdateContactPhoto() {
+    log:print("Running Update Contact Photo Test");
+    var updateContactPhoto = googleContactClient->updateContactPhoto(contactResourceName, "tests/image.png");
+    if (updateContactPhoto is boolean) {
+        test:assertTrue(true, msg = "Update Contact Photo Failed");
+    } else {
+        test:assertFail(msg = updateContactPhoto.message());
+    }
+}
+
+@test:Config {dependsOn: [testUpdateContactPhoto]}
+function testDeleteContactPhoto() {
+    log:print("Running Delete Contact Photo Test");
+    var deleteContactPhoto = googleContactClient->deleteContactPhoto(contactResourceName);
+    if (deleteContactPhoto is boolean) {
+        test:assertTrue(true, msg = "Delete Contact Photo Failed");
+    } else {
+        test:assertFail(msg = deleteContactPhoto.message());
+    }
+}
+
+@test:Config {dependsOn: [testCreateContact, testGetPeople, testDeleteContactPhoto]}
+function testDeleteContact() {
+    log:print("Running Delete Contact Test");
+    runtime:sleep(10);
+    var deleteContact = googleContactClient->deleteContact(contactResourceName);
+    if (deleteContact is boolean) {
+        test:assertTrue(true, msg = "Delete Contact Failed");
+    } else {
+        test:assertFail(msg = deleteContact.message());
+    }
+}
+
+string contactGroupResourceName = "";
 
 @test:Config {}
 function testCreateContactGroup() {
-    io:println("Running Create Contact Group Test");
-    var createContactGroup = gContactClient->createContactGroup();
+    log:print("Running Create Contact Group Test");
+    string[] readGroupFields = ["name", "clientData", "groupType", "metadata"];
+    var createContactGroup = googleContactClient->createContactGroup("TestContactGroup", readGroupFields);
     if (createContactGroup is ContactGroup) {
-        contactGroupResourceName = <@untainted> createContactGroup.resourceName;
+        log:print(createContactGroup.toString());
+        contactGroupResourceName = createContactGroup.resourceName;
         test:assertTrue(true, msg = "Creating Contact Group Failed");
     } else {
         test:assertFail(msg = createContactGroup.message());
     }
 }
 
-@test:Config {}
+@test:Config {dependsOn: [testCreateContactGroup]}
 function testGetContactGroup() {
-    io:println("Running Get Contact Group Test");
-    io:println(contactGroupResourceName);
-    var getContactGroup = gContactClient->getContactGroup(contactGroupResourceName);
+    log:print("Running Get Contact Group Test");
+    runtime:sleep(10);
+    var getContactGroup = googleContactClient->getContactGroup(contactGroupResourceName);
     if (getContactGroup is ContactGroup) {
+        log:print(getContactGroup.toString());
+        contactGroupResourceName = getContactGroup.resourceName;
         test:assertTrue(true, msg = "Fetching Contact Group Failed");
     } else {
         test:assertFail(msg = getContactGroup.message());
     }
 }
 
-@test:Config {}
+@test:Config {dependsOn: [testCreateContactGroup]}
 function testbatchGetContactGroup() {
-    io:println("Running BatchGet Contact Group Test");
-    io:println(contactGroupResourceName);
-    var batchGetContactGroup = gContactClient->batchGetContactGroup(contactGroupResourceName);
-    if (batchGetContactGroup is json) {
-        test:assertTrue(true, msg = "BatchGet Contact Group Failed");
+    log:print("Running BatchGet Contact Group Test");
+    runtime:sleep(10);
+    var batchGetContactGroup = googleContactClient->batchGetContactGroup(contactGroupResourceName);
+    if (batchGetContactGroup is ContactGroup) {
+        log:print(batchGetContactGroup.toString());
+        test:assertTrue(true, msg = "Batch Get Contact Group Failed");
     } else {
         test:assertFail(msg = batchGetContactGroup.message());
     }
 }
 
-@test:Config {}
+@test:Config {dependsOn: [testCreateContactGroup]}
 function testListContactGroup() {
-    io:println("Running List Contact Group Test");
-    var listContactGroup = gContactClient->listContactGroup();
-    if (listContactGroup is json) {
+    log:print("Running List Contact Group Test");
+    runtime:sleep(10);
+    var listContactGroup = googleContactClient->listContactGroup();
+    if (listContactGroup is ContactGroup[]) {
+        log:print(listContactGroup.toString());
         test:assertTrue(true, msg = "List Contact Group Failed");
     } else {
         test:assertFail(msg = listContactGroup.message());
     }
 }
 
-@test:Config {}
+@test:Config {dependsOn: [testCreateContactGroup]}
+function testUpdateContactGroup() {
+    log:print("Running Update Contact Group Test");
+    runtime:sleep(10);
+    var getContactGroup = googleContactClient->getContactGroup(contactGroupResourceName);
+    if (getContactGroup is ContactGroup) {
+        log:print(getContactGroup.toString());
+        contactGroupResourceName = getContactGroup.resourceName;
+        getContactGroup.name = "TestContactGroupUpdated";
+        json|error payload = getContactGroup.cloneWithType(json);
+        if(payload is json){
+            var updateContactGroup = googleContactClient->updateContactGroup(contactGroupResourceName, payload);
+            if (updateContactGroup is ContactGroup) {
+                log:print(updateContactGroup.toString());
+                contactGroupResourceName = updateContactGroup.resourceName;
+                test:assertTrue(true, msg = "Update Contact Group Failed");
+            } else {
+                test:assertFail(msg = updateContactGroup.message());
+            }
+        }
+    } else {
+        test:assertFail(msg = getContactGroup.message());
+    }
+}
+
+@test:Config {dependsOn: [testCreateContactGroup, testGetContactGroup, testUpdateContactGroup, testbatchGetContactGroup, 
+    testListContactGroup]}
 function testDeleteContactGroup() {
-    io:println("Running Delete Contact Group Test");
-    var deleteContactGroup = gContactClient->deleteContactGroup(contactGroupResourceName);
-    if (deleteContactGroup is json) {
+    log:print("Running Delete Contact Group Test");
+    runtime:sleep(10);
+    var deleteContactGroup = googleContactClient->deleteContactGroup(contactGroupResourceName);
+    if (deleteContactGroup is boolean) {
+        log:print(deleteContactGroup.toString());
         test:assertTrue(true, msg = "Delete Contact Group Failed");
     } else {
         test:assertFail(msg = deleteContactGroup.message());
+    }
+}
+
+@test:Config {}
+function testListPeopleConnection() {
+    log:print("Running List People Connection Test");
+    string[] personFields = ["names", "emailAddresses", "phoneNumbers", "photos"];
+    var listPeopleConnection = googleContactClient->listPeopleConnection(personFields);
+    if (listPeopleConnection is stream<Person>) {
+        var event = listPeopleConnection.next();
+        log:print(event?.value.toString());
+        test:assertTrue(true, msg = "List People Connection Failed");
+    } else {
+        test:assertFail(msg = listPeopleConnection.message());
     }
 }

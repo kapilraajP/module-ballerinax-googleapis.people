@@ -33,3 +33,5 @@ ballerina.conf
 
 #resource folder in tests folder
 /tests/resources
+
+Config.toml
