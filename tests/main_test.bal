@@ -16,6 +16,7 @@
 
 import ballerina/test;
 import ballerina/log;
+import ballerina/os;
 import ballerina/lang.runtime;
 
 //Create an endpoint to use Google People API Connector
