@@ -18,7 +18,7 @@ import ballerina/test;
 import ballerina/log;
 import ballerina/lang.runtime;
 
-//Create an endpoint to use Google People Connector
+//Create an endpoint to use Google People API Connector
 GoogleContactsConfiguration googleContactConfig = {oauthClientConfig: {
         clientId: os:getEnv("CLIENT_ID"),
         clientSecret: os:getEnv("CLIENT_SECRET"),
