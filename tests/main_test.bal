@@ -20,10 +20,10 @@ import ballerina/lang.runtime;
 
 //Create an endpoint to use Gmail Connector
 GoogleContactsConfiguration googleContactConfig = {oauthClientConfig: {
-        clientId: os:getEnv("CLIENT_ID"),
-        clientSecret: os:getEnv("CLIENT_SECRET"),
+        clientId: "849350585166-6lr87p2tunuafhiicctjdnr5i0ncujt8.apps.googleusercontent.com",
+        clientSecret: "sI7fx4nezJ0-fNFKA-PATQ51",
         refreshUrl: REFRESH_URL,
-        refreshToken: os:getEnv("REFRESH_TOKEN")
+        refreshToken: "1//045eosq_25r-BCgYIARAAGAQSNwF-L9IrBjHpOFHkSYWocqE02YC7Sds2P1CcOUUn3W1Dg0xACzFQYHIZZIpDHaFqR5fOKkH4stQ"
     }};
 
 Client googleContactClient = check new (googleContactConfig);
@@ -33,8 +33,10 @@ function testListOtherContacts() {
     log:print("Running List Other Contact Test");
     string[] readMasks = ["names", "phoneNumbers", "emailAddresses"];
     var listContacts = googleContactClient->listOtherContacts(readMasks);
-    if (listContacts is Person[]) {
-        log:print(listContacts.toString());
+    if (listContacts is stream<Person>) {
+        error? e = listContacts.forEach(isolated function (Person person) {
+            log:print(person.toString());
+        });
         test:assertTrue(true, msg = "List Other Contacts Failed");
     } else {
         test:assertFail(msg = listContacts.message());
@@ -140,6 +142,7 @@ function testUpdateContactPhoto() {
     log:print("Running Update Contact Photo Test");
     var updateContactPhoto = googleContactClient->updateContactPhoto(contactResourceName, "tests/image.png");
     if (updateContactPhoto is boolean) {
+        log:print(updateContactPhoto.toString());
         test:assertTrue(true, msg = "Update Contact Photo Failed");
     } else {
         test:assertFail(msg = updateContactPhoto.message());
@@ -151,6 +154,7 @@ function testDeleteContactPhoto() {
     log:print("Running Delete Contact Photo Test");
     var deleteContactPhoto = googleContactClient->deleteContactPhoto(contactResourceName);
     if (deleteContactPhoto is boolean) {
+        log:print(deleteContactPhoto.toString());
         test:assertTrue(true, msg = "Delete Contact Photo Failed");
     } else {
         test:assertFail(msg = deleteContactPhoto.message());
@@ -163,6 +167,7 @@ function testDeleteContact() {
     runtime:sleep(10);
     var deleteContact = googleContactClient->deleteContact(contactResourceName);
     if (deleteContact is boolean) {
+        log:print(deleteContact.toString());
         test:assertTrue(true, msg = "Delete Contact Failed");
     } else {
         test:assertFail(msg = deleteContact.message());
@@ -270,8 +275,9 @@ function testListPeopleConnection() {
     string[] personFields = ["names", "emailAddresses", "phoneNumbers", "photos"];
     var listPeopleConnection = googleContactClient->listPeopleConnection(personFields);
     if (listPeopleConnection is stream<Person>) {
-        var event = listPeopleConnection.next();
-        log:print(event?.value.toString());
+        error? e = listPeopleConnection.forEach(isolated function (Person person) {
+            log:print(person.toString());
+        });
         test:assertTrue(true, msg = "List People Connection Failed");
     } else {
         test:assertFail(msg = listPeopleConnection.message());

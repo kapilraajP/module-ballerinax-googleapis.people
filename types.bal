@@ -24,7 +24,7 @@ public type OtherContactList record {
 #
 # + resourceName - String of the resource name
 # + etag - ETag of the resource
-# + metadata - 
+# + metadata - Metadata about person
 # + addresses - 
 # + ageRanges - 
 # + biographies - 
@@ -93,7 +93,7 @@ public type CreatePerson record {
 
 # Define a Address.
 #
-# + metadata - 
+# + metadata - Metadata about Address
 # + formattedValue - 
 # + type - 
 # + formattedType - 
@@ -122,7 +122,7 @@ public type Address record {
 
 # Define a PhoneNumber.
 #
-# + metadata - 
+# + metadata - Metadata about PhoneNumber
 # + value - 
 # + canonicalForm - 
 # + type - 
@@ -137,7 +137,7 @@ public type PhoneNumber record {
 
 # Define a Name.
 #
-# + metadata - 
+# + metadata - Metadata about Name
 # + displayName - 
 # + displayNameLastFirst - 
 # + unstructuredName - 
@@ -172,7 +172,7 @@ public type Name record {
 
 # Define an Email Address.
 #
-# + metadata - 
+# + metadata - Metadata about Email Address
 # + value - 
 # + type - 
 # + formattedType - 
@@ -185,9 +185,9 @@ public type EmailAddress record {
     string displayName?;
 };
 
-# Define an Email Address.
+# Define a Photo.
 #
-# + metadata - 
+# + metadata - Metadata about Photo
 # + url - 
 # + default - 
 public type Photo record {
@@ -198,7 +198,7 @@ public type Photo record {
 
 # Define an Age Range.
 #
-# + metadata - 
+# + metadata - Metadata about Age Range
 # + ageRange - 
 public type AgeRangeType record {
     FieldMetaData metadata?;
@@ -364,6 +364,12 @@ public type ConnectionsResponse record {
     string nextSyncToken?;
     int totalPeople?;
     int totalItems?;
+};
+
+public type OtherContactListResponse record {
+    Person[] otherContacts;
+    string nextPageToken?;
+    string nextSyncToken?;
 };
 
 public type BatchGetResponse record {

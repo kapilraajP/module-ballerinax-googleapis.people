@@ -46,19 +46,13 @@ public client class Client {
     # 
     # + readMasks - restrict which fields on the person are returned
     # + return - Person Array on success else an error
-    remote function listOtherContacts(string[] readMasks) returns @tainted Person[]|error {
+    remote function listOtherContacts(string[] readMasks, ContactListOptional? optional = ()) returns @tainted stream<Person>|error {
         string path = LIST_OTHERCONTACT_PATH;
         http:Request request = new;
         string pathWithReadMasks = prepareUrlWithReadMasks(path, readMasks);
-        http:Response httpResponse = <http:Response>check self.googleContactClient->get(pathWithReadMasks, request);
-        json listOtherContactsResponse = check httpResponse.getJsonPayload();
-        if (httpResponse.statusCode == http:STATUS_OK) {
-            OtherContactList otherContactGroupList = check listOtherContactsResponse.cloneWithType(OtherContactList);
-            Person[] otherContactGroupArray = otherContactGroupList.otherContacts;
-            return otherContactGroupArray;
-        } else {
-            return createError(listOtherContactsResponse.toString());
-        }
+
+        Person[] allPersons = [];
+        return getOtherContactsStream(self.googleContactClient, allPersons, pathWithReadMasks, optional);
     }
 
     # Copy a Contact from OtherContact to MyContact.
@@ -271,8 +265,8 @@ public client class Client {
     # 
     # + optional - Record that contains optionals
     # + return - Stream of Person on success or else an error
-    remote function listPeopleConnection(string[] personFields, ContactListOptional? optional = ()) returns @tainted stream<
-    Person>|error {
+    remote function listPeopleConnection(string[] personFields, ContactListOptional? optional = ()) returns @tainted 
+    stream<Person>|error {
         string path = LIST_PEOPLE_PATH;
         string pathWithPersonFields = prepareUrlWithPersonFields(path, personFields);
         Person[] allPersons = [];

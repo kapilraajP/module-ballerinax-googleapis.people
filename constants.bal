@@ -40,7 +40,7 @@ const string SOURCE_PATH = "&sources=DIRECTORY_SOURCE_TYPE_DOMAIN_CONTACT";
 const string BATCH_CONTACT_PATH = "/people:batchGet";
 const string BATCH_RESOURCE_PATH = "?resourceNames=people/me";
 const string PERSON_FIELDS_PATH = "&personFields=names,emailAddresses,phoneNumbers";
-const string SEARCH_CONTACT_PATH = "/people:batchGet";
+const string SEARCH_CONTACT_PATH = "/people:searchContacts";
 const string SEARCH_OTHERCONTACT_PATH = "/otherContacts:search";
 const string COPY_CONTACT_PATH = ":copyOtherContactToMyContactsGroup";
 const string LIST_OTHERCONTACT_PATH = "/otherContacts?readMask=";

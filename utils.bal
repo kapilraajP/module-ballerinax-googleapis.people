@@ -102,7 +102,7 @@ isolated function prepareCopyMaskString(string[] copyMasks) returns string {
 
 # Prepare URL with ReadMaskFields.
 # 
-# + readGroupFields - An string array of fields to be fetched
+# + readMasks - An string array of fields to be fetched
 # + return - The prepared URL string
 isolated function prepareReadMaskString(string[] readMasks) returns string {
     string path = "";
@@ -155,6 +155,36 @@ function getContactsStream(http:Client googleContactClient, @tainted Person[] pe
     if (res is ConnectionsResponse) {
         int i = persons.length();
         foreach Person person in res.connections {
+            persons[i] = person;
+            i = i + 1;
+        }
+        stream<Person> contactStream = (<@untainted>persons).toStream();
+        string? pageToken = res?.nextPageToken;
+        if (pageToken is string && optional is ContactListOptional) {
+            optional.pageToken = pageToken;
+            var streams = check getContactsStream(googleContactClient, persons, EMPTY_STRING, optional);
+        }
+        return contactStream;
+    } else {
+        return error("Error");
+    }
+}
+
+# Get persons stream.
+# 
+# + googleContactClient - Contact client
+# + persons - Person array
+# + optional - Record that contains optional parameters
+# + return - Person stream on success, else an error
+function getOtherContactsStream(http:Client googleContactClient, @tainted Person[] persons, string pathProvided = "", 
+                           ContactListOptional? optional = ()) returns @tainted stream<Person>|error {
+    string path = <@untainted>prepareUrlWithContactOptional(pathProvided, optional);
+    var httpResponse = googleContactClient->get(path);
+    json resp = check checkAndSetErrors(httpResponse);
+    OtherContactListResponse|error res = resp.cloneWithType(OtherContactListResponse);
+    if (res is OtherContactListResponse) {
+        int i = persons.length();
+        foreach Person person in res.otherContacts {
             persons[i] = person;
             i = i + 1;
         }
