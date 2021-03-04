@@ -15,7 +15,7 @@ Connects to Google People using Ballerina.
 
 ## Connector Overview
 
-The Google People Ballerina Connector allows you to access the Google People API Version V1 through Ballerina. The connector can be used to implement some of the most common use cases of Google People. The connector provides the capability to programmatically manage contacts and contact groups, CRUD operations on contacts and contact groups operations through the connector endpoints and listener for the events created in the contacts.
+The Google People Ballerina Connector allows you to access the Google People API Version V1 through Ballerina. The connector can be used to implement some of the most common use cases of Google People. The connector provides the capability to programmatically manage contacts and contact groups, CRUD operations on contacts and contact groups operations through the connector endpoints.
 
 # Prerequisites
 
@@ -31,10 +31,6 @@ The Google People Ballerina Connector allows you to access the Google People API
     * Client Secret
     * Refresh Token
     * Refresh URL
-  * In order to use listener address, resource id and channel id are additionally required. Address URL is url path of the listener. Channel id and resource id will be provided when channel is registered using watch operation.
-    * Address URL
-    * Resource ID
-    * Channel ID
 
 ## Compatibility
 
