@@ -18,12 +18,12 @@ import ballerina/test;
 import ballerina/log;
 import ballerina/lang.runtime;
 
-//Create an endpoint to use Gmail Connector
+//Create an endpoint to use Google People Connector
 GoogleContactsConfiguration googleContactConfig = {oauthClientConfig: {
-        clientId: "849350585166-6lr87p2tunuafhiicctjdnr5i0ncujt8.apps.googleusercontent.com",
-        clientSecret: "sI7fx4nezJ0-fNFKA-PATQ51",
+        clientId: os:getEnv("CLIENT_ID"),
+        clientSecret: os:getEnv("CLIENT_SECRET"),
         refreshUrl: REFRESH_URL,
-        refreshToken: "1//045eosq_25r-BCgYIARAAGAQSNwF-L9IrBjHpOFHkSYWocqE02YC7Sds2P1CcOUUn3W1Dg0xACzFQYHIZZIpDHaFqR5fOKkH4stQ"
+        refreshToken: os:getEnv("REFRESH_TOKEN")
     }};
 
 Client googleContactClient = check new (googleContactConfig);
